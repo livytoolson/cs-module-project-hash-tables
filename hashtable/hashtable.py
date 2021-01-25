@@ -21,7 +21,9 @@ class HashTable:
     """
 
     def __init__(self, capacity):
-        # Your code here
+        self.capacity = capacity                # number of slots in the hash table
+        self.storage = [None] * capacity        # fills self.storage list with the same number of None's as we have capacity
+        self.size = 0                           # counts all the nodes in the linked list
 
 
     def get_num_slots(self):
@@ -34,29 +36,37 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        return self.capacity
 
 
-    def get_load_factor(self):
+    def get_load_factor(self):                  # how full the table is
         """
         Return the load factor for this hash table.
 
         Implement this.
         """
-        # Your code here
+        return self.size / self.capacity
 
+    # the following two methods are hashing functions -- we only need to use one of these
 
-    def fnv1(self, key):
+    def fnv1(self, key):                        
         """
         FNV-1 Hash, 64-bit
 
         Implement this, and/or DJB2.
         """
+        FNV_prime = 1099511628211
+        FNV_offset = 14695981039346656037
+        hash = FNV_offset
 
-        # Your code here
+        for char in key:
+            hash = hash * FNV_prime
+            hash = hash ^ ord(char)             # ord() converts string to binary equivalent to an ASCII number
+
+        return hash 
 
 
-    def djb2(self, key):
+    # def djb2(self, key):
         """
         DJB2 hash, 32-bit
 
@@ -70,8 +80,8 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
-        return self.djb2(key) % self.capacity
+        return self.fnv1(key) % self.capacity
+        # return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -81,7 +91,26 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        index = self.hash_index(key)
+        node = HashTableEntry(key, value)               # created a new node
+        if self.storage[index] is not None:            
+            if self.storage[index].key == key:           # if the key is the one we want we are going to -->
+                self.storage[index].value = value       # update the value
+            else:
+                current = self.storage[index]           # creating a new pointer
+                while current.next is not None:         # while the next node of the current index is not none
+                    if current.key == key:
+                        current.value = value
+                    else:
+                        current = current.next
+                if current.key == key:                  # this will check the very last node
+                    current.value = value               # update the value
+                else:                                   # if we never find the node we are looking for, we are going to add a new node
+                    current.next = node
+                    self.size += 1                      # self.size counts all the nodes
+        else:
+            self.storage[index] = node
+            self.size += 1
 
 
     def delete(self, key):
@@ -92,7 +121,25 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        index = self.hash_index(key)
+        if self.storage[index] is None:                             # checking to see if they key does not exist in the table
+            print("This key does not exist in the table.")
+            return
+        if self.storage[index].key == key:                          # if they very first key at the index is the one we are looking for
+            if self.storage[index].next is not None:                # if there is something after self.storage at index -->
+                self.storage[index] = self.storage[index].next      # reset pointer to equal the node that came after it, deleting the pointer
+            else:
+                self.storage[index] = None
+        else:
+            current = self.storage[index].next
+            prev = self.storage[index]
+            while current is not None:
+                if current.key == key:
+                    prev.next = current.next
+                    self.size -= 1
+                else:
+                    prev = current
+                    current = current.next
 
 
     def get(self, key):
@@ -103,17 +150,31 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        index = self.hash_index(key)
+        if self.storage[index] is None:             # if there is no node at index of self.storage return None
+            return None
+        current = self.storage[index]               # create pointer 
+        while current:
+            if current.key == key:                  # if the current key is equal to the key passed in, return the value of the current 
+                return current.value
+            else:
+                current = current.next              # if the key was not found move the pointer to the next node
+        return None                                 # return None if the key was not found
 
 
-    def resize(self, new_capacity):
+    def resize(self, new_capacity):                 # this method will be used when we have filled all of our capacity and we need more space
         """
         Changes the capacity of the hash table and
         rehashes all key/value pairs.
 
         Implement this.
         """
-        # Your code here
+        self.capacity = new_capacity                
+        old_storage = self.storage                  # store old storage in old_storage variable
+        self.storage = [None] * self.capacity
+        for node in old_storage:                    # goes through first node in every index
+            if node is not None:                    
+                self.put(node.key, node.value)      # add node into the list -- only move the head nodes because it's a linked list
 
 
 

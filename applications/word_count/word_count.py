@@ -1,6 +1,15 @@
 def word_count(s):
-    # Your code here
+    counters = {}
+    word_list = s.lower().split()
 
+    for word in word_list:
+        word.strip('":;,.-+=/\\|[]}{()*^&')
+        if word not in counters:
+            counters[word] = 0              # key is what is passed into the brackets, value is what we reassign it to
+        counters[word] += 1
+    print(f"\nkeys: {counters.keys()}")
+    print(f"values: {counters.values()}")
+    return counters                         # to return just keys there is a .keys() method, to return just values there is a .values() method
 
 
 if __name__ == "__main__":
